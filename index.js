@@ -1,6 +1,7 @@
 
 var util = require('util')
 var Q = require('q')
+var typeforce = require('typeforce')
 var Offline = require('offline-keeper')
 var Client = require('bitkeeper-client-js')
 
@@ -9,6 +10,10 @@ module.exports = Keeper
 
 function Keeper (options) {
   var self = this
+
+  typeforce({
+    fallbacks: typeforce.arrayOf('String')
+  }, options)
 
   Offline.call(this, options)
 
