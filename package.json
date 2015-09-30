@@ -1,0 +1,32 @@
+{
+  "author": "Mark Vayngrib <mark.vayngrib@lablz.com> (http://github.com/mvayngrib)",
+  "bugs": {
+    "url": "https://github.com/tradle/http-keeper/issues"
+  },
+  "description": "[![NPM](https://nodei.co/npm/http-keeper.png)](https://nodei.co/npm/http-keeper/)",
+  "devDependencies": {
+    "tape": "^4.2.0"
+  },
+  "homepage": "https://github.com/tradle/http-keeper",
+  "keywords": [
+    "bitkeeper",
+    "tradle",
+    "http"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "http-keeper",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tradle/http-keeper"
+  },
+  "scripts": {
+    "test": "node test"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "bitkeeper-client-js": "tradle/bitkeeper-client-js",
+    "offline-keeper": "^1.0.0",
+    "q": "^1.4.1"
+  }
+}
