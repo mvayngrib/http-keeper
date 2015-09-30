@@ -3,7 +3,7 @@
   "bugs": {
     "url": "https://github.com/tradle/http-keeper/issues"
   },
-  "description": "[![NPM](https://nodei.co/npm/http-keeper.png)](https://nodei.co/npm/http-keeper/)",
+  "description": "Basic offline keeper with fallback to fetching files via http",
   "devDependencies": {
     "tape": "^4.2.0"
   },
@@ -13,7 +13,7 @@
     "tradle",
     "http"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "main": "index.js",
   "name": "http-keeper",
   "repository": {
