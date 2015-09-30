@@ -69,11 +69,11 @@ test('put, get, fallback', function (t) {
 
   var basePort = 53352
   var map = {
-    a: new Buffer('1'),
-    b: new Buffer('2'),
-    c: new Buffer('3'),
-    d: new Buffer('4'),
-    e: new Buffer('5')
+    "64fe16cc8a0c61c06bc403e02f515ce5614a35f1": new Buffer('1'),
+    "0a745fb75a7818acf09f27de1db7a76081d22776": new Buffer('2'),
+    "bd45a097c00e557ea871233ea21d27a47f8f21a9": new Buffer('3'),
+    "de1ea0a4ec16e8c7b10cb1dde3bf644be2fb5c57": new Buffer('4'),
+    e: new Buffer('5') // invalid
   }
 
   var keys = Object.keys(map).sort(function (a, b) {
@@ -83,7 +83,7 @@ test('put, get, fallback', function (t) {
   })
 
   var vals = keys.map(function (k) {
-    return map[k]
+    return k === 'e' ? undefined : map[k]
   })
 
   var togo = 0

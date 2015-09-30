@@ -64,6 +64,12 @@ Keeper.prototype._fetch = function (key) {
 
     return self._fallbacks[i++]
       .getOne(key)
+      .then(function (val) {
+        return self._validate(key, val)
+          .then(function () {
+            return val
+          })
+      })
       .catch(tryNext)
   }
 }
