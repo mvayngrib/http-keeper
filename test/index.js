@@ -50,7 +50,7 @@ test('put, get', function (t) {
     if (--togo) return
 
     var keeper = new Keeper({
-      path: testDir,
+      storage: testDir,
       fallbacks: servers.map(function (s, i) {
         return '127.0.0.1:' + (basePort + i)
       })
