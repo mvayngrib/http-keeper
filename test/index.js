@@ -6,6 +6,8 @@ var test = require('tape')
 var Q = require('q')
 var rimraf = require('rimraf')
 var Keeper = require('../')
+var Offline = require('offline-keeper')
+var Server = require('bitkeeper-server-js')
 var testDir = path.resolve('./tmp')
 
 rimraf.sync(testDir)
@@ -57,16 +59,13 @@ test('put, get', function (t) {
     })
     .then(function (vals) {
       t.deepEqual(vals, v)
-    })
-    .then(function () {
-      return Q.nfapply(rimraf, [testDir])
+      rimraf.sync(testDir)
     })
     .done()
 })
 
 test('put, get, fallback', function (t) {
   // each server only has one value
-
   var basePort = 53352
   var map = {
     "64fe16cc8a0c61c06bc403e02f515ce5614a35f1": new Buffer('1'),
@@ -87,44 +86,68 @@ test('put, get, fallback', function (t) {
   })
 
   var togo = 0
-  var servers = keys.map(function (key, i) {
+  var serverKeepers = []
+  var mkServers = keys.map(function (key, i) {
     togo++
-    var server = http.createServer(function (req, res) {
-      if (req.url.slice(1) === key) {
-        res.write(map[key])
-        res.end()
-      } else {
-        res.writeHead(404)
-        res.end()
-      }
+    var serverKeeper = new Offline({
+      storage: testDir + '/offline/' + i
     })
 
-    server.listen(basePort + i, ready)
-    return server
-  })
-
-  function ready () {
-    if (--togo) return
-
-    var keeper = new Keeper({
-      storage: testDir,
-      fallbacks: servers.map(function (s, i) {
-        return '127.0.0.1:' + (basePort + i)
-      })
-    })
-
-    keeper.getMany(keys)
-      .then(function (v) {
-        t.deepEqual(v, vals)
-        t.end()
+    serverKeepers.push(serverKeeper)
+    return serverKeeper.put(key, map[key])
+      .catch(function (err) {
+        // one value is invalid
       })
       .then(function () {
-        servers.forEach(function (s) {
-          s.close()
+        return Q.ninvoke(Server, 'create', {
+          keeper: serverKeeper,
+          port: basePort + i
         })
-
-        return keeper.close()
       })
-      .done()
-  }
+
+
+    // var server = http.createServer(function (req, res) {
+    //   if (req.url.slice(1) === key) {
+    //     res.write(map[key])
+    //     res.end()
+    //   } else {
+    //     res.writeHead(404)
+    //     res.end()
+    //   }
+    // })
+
+    // server.listen(basePort + i, ready)
+    // return server
+  })
+
+  var servers
+  var clientKeeper
+  Q.all(mkServers)
+    .then(function (_servers) {
+      servers = _servers
+      clientKeeper = new Keeper({
+        storage: testDir,
+        fallbacks: servers.map(function (s, i) {
+          return '127.0.0.1:' + (basePort + i)
+        })
+      })
+
+      return clientKeeper.getMany(keys)
+    })
+    .then(function (v) {
+      t.deepEqual(v, vals)
+      t.end()
+    })
+    .then(function () {
+      servers.forEach(function (server) {
+        return server.close()
+      })
+
+      return clientKeeper.close()
+    })
+    .done(function () {
+      setInterval(function () {
+        console.log(process._getActiveHandles())
+      }, 1000).unref()
+    })
 })

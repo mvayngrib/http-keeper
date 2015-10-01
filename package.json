@@ -5,6 +5,7 @@
   },
   "description": "Basic offline keeper with fallback to fetching files via http",
   "devDependencies": {
+    "bitkeeper-server-js": "tradle/bitkeeper-server-js",
     "rimraf": "^2.4.3",
     "tape": "^4.2.0"
   },
