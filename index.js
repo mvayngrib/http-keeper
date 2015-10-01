@@ -37,9 +37,7 @@ function Keeper (options) {
     return putOne.apply(this, arguments)
       .then(function () {
         if (options.push) {
-          return Q.allSettled(self._fallbacks.map(function (c) {
-            return c.put(options.key, options.value)
-          }))
+          return self.push(options)
         }
       })
   }
@@ -53,6 +51,16 @@ function Keeper (options) {
 //       }))
 //     })
 // }
+
+Keeper.prototype.push = function (options) {
+  var self = this
+  return this._normalizeOptions(options)
+    .then(function (options) {
+      return Q.allSettled(self._fallbacks.map(function (c) {
+        return c.put(options.key, options.value)
+      }))
+    })
+}
 
 Keeper.prototype._fetch = function (key) {
   var self = this
