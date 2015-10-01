@@ -132,8 +132,6 @@ test('put, get, fallback', function (t) {
       return clientKeeper.close()
     })
     .done(function () {
-      setInterval(function () {
-        console.log(process._getActiveHandles())
-      }, 1000).unref()
+      rimraf.sync(testDir)
     })
 })
