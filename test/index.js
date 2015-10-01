@@ -104,20 +104,6 @@ test('put, get, fallback', function (t) {
           port: basePort + i
         })
       })
-
-
-    // var server = http.createServer(function (req, res) {
-    //   if (req.url.slice(1) === key) {
-    //     res.write(map[key])
-    //     res.end()
-    //   } else {
-    //     res.writeHead(404)
-    //     res.end()
-    //   }
-    // })
-
-    // server.listen(basePort + i, ready)
-    // return server
   })
 
   var servers
