@@ -9,8 +9,10 @@ var Keeper = require('../')
 var Offline = require('offline-keeper')
 var Server = require('bitkeeper-server-js')
 var testDir = path.resolve('./tmp')
+var basePort = 53352
 
 rimraf.sync(testDir)
+
 
 test('test invalid keys', function (t) {
   t.plan(1)
@@ -39,10 +41,11 @@ test('put, get', function (t) {
   var k = [
     // infoHashes of values
     '64fe16cc8a0c61c06bc403e02f515ce5614a35f1',
-    '0a745fb75a7818acf09f27de1db7a76081d22776'
+    '0a745fb75a7818acf09f27de1db7a76081d22776',
+    'bd45a097c00e557ea871233ea21d27a47f8f21a9'
   ]
 
-  var v = ['1', '2'].map(Buffer)
+  var v = ['1', '2', '3'].map(Buffer)
   keeper.putOne(k[0], v[0])
     .then(function () {
       return keeper.getOne(k[0])
@@ -52,7 +55,7 @@ test('put, get', function (t) {
     })
     .then(function () {
       // keeper should derive key
-      return keeper.putOne(v[1])
+      return keeper.putMany(v.slice(1))
     })
     .then(function () {
       return keeper.getMany(k)
@@ -66,7 +69,6 @@ test('put, get', function (t) {
 
 test('put, get, fallback', function (t) {
   // each server only has one value
-  var basePort = 53352
   var map = {
     "64fe16cc8a0c61c06bc403e02f515ce5614a35f1": new Buffer('1'),
     "0a745fb75a7818acf09f27de1db7a76081d22776": new Buffer('2'),
@@ -129,6 +131,48 @@ test('put, get, fallback', function (t) {
         return server.close()
       })
 
+      return clientKeeper.close()
+    })
+    .done(function () {
+      rimraf.sync(testDir)
+    })
+})
+
+test('put upload', function (t) {
+  var serverKeeper = new Offline({
+    storage: testDir + '/server'
+  })
+
+  var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
+  var val = new Buffer('1')
+  var server
+  var clientKeeper
+  Q.ninvoke(Server, 'create', {
+      keeper: serverKeeper,
+      port: basePort
+    })
+    .then(function (_server) {
+      server = _server
+      clientKeeper = new Keeper({
+        storage: testDir,
+        fallbacks: [
+          '127.0.0.1:' + basePort
+        ]
+      })
+
+      return clientKeeper.putOne({
+        key: key,
+        value: val,
+        push: true
+      })
+    })
+    .then(function () {
+      return serverKeeper.getOne(key)
+    })
+    .then(function (v) {
+      t.deepEqual(v, val)
+      t.end()
+      server.close()
       return clientKeeper.close()
     })
     .done(function () {

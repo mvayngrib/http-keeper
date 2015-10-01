@@ -30,6 +30,19 @@ function Keeper (options) {
         return self._fetch(key)
       })
   }
+
+  var putOne = this.putOne
+  this.put =
+  this.putOne = function (options) {
+    return putOne.apply(this, arguments)
+      .then(function () {
+        if (options.push) {
+          return Q.allSettled(self._fallbacks.map(function (c) {
+            return c.put(options.key, options.value)
+          }))
+        }
+      })
+  }
 }
 
 // Keeper.prototype.publish = function (key, value) {
