@@ -67,6 +67,29 @@ test('put, get', function (t) {
     .done()
 })
 
+// test('timeout', function (t) {
+//   var clientKeeper = new Keeper({
+//     storage: testDir,
+//     fallbacks: ['127.0.0.1:' + basePort]
+//   })
+
+//   var server = http.createServer(function (c) {
+//     // hang
+//   })
+
+//   server.listen(basePort, function () {
+//     clientKeeper.getOne('blah', 500)
+//       .catch(function (err) {
+//         t.ok(/time/.test(err.message))
+//         server.close()
+//         clientKeeper.close()
+//         rimraf.sync(testDir)
+//         t.end()
+//       })
+//       .done()
+//   })
+// })
+
 test('put, get, fallback', function (t) {
   // each server only has one value
   var map = {
@@ -124,17 +147,22 @@ test('put, get, fallback', function (t) {
     })
     .then(function (v) {
       t.deepEqual(v, vals)
-      t.end()
     })
     .then(function () {
       servers.forEach(function (server) {
         return server.close()
       })
 
+      // should be stored
+      return clientKeeper.getMany(keys)
+    })
+    .then(function (v) {
+      t.deepEqual(v, vals)
       return clientKeeper.close()
     })
     .done(function () {
       rimraf.sync(testDir)
+      t.end()
     })
 })
 
