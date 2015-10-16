@@ -137,6 +137,7 @@ test('put, get, fallback', function (t) {
     .then(function (_servers) {
       servers = _servers
       clientKeeper = new Keeper({
+        storeOnFetch: true,
         storage: testDir,
         fallbacks: servers.map(function (s, i) {
           return '127.0.0.1:' + (basePort + i)

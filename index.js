@@ -12,13 +12,15 @@ function Keeper (options) {
   var self = this
 
   typeforce({
-    fallbacks: typeforce.maybe(typeforce.arrayOf('String'))
+    fallbacks: typeforce.maybe(typeforce.arrayOf('String')),
+    storeOnFetch: '?Boolean'
   }, options)
 
   Offline.call(this, options)
 
   if (!options.fallbacks) return
 
+  this._storeOnFetch = options.storeOnFetch
   this._fallbacks = options.fallbacks.map(function (url) {
     return new Client(url)
   })
@@ -80,6 +82,8 @@ Keeper.prototype._fetch = function (key) {
   }
 
   function putAndReturn (val) {
+    if (!self._storeOnFetch) return
+
     return self.putOne(key, val)
       .then(function () {
         return val
