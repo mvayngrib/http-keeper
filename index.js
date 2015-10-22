@@ -72,7 +72,7 @@ Keeper.prototype._fetch = function (key) {
 
   function tryNext () {
     if (i === self._fallbacks.length) {
-      return Q.reject('not found')
+      return Q.reject(new Error('not found'))
     }
 
     return self._fallbacks[i++]
