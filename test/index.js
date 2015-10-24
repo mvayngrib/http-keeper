@@ -1,4 +1,5 @@
 
+var fs = require('fs')
 var http = require('http')
 var path = require('path')
 var parseUrl = require('url').parse
@@ -13,6 +14,35 @@ var basePort = 53352
 
 rimraf.sync(testDir)
 
+test('flat vs github dir structure', function (t) {
+  debugger
+  var flat = new Keeper({
+    storage: testDir,
+    flat: true
+  })
+
+  var github = new Keeper({
+    storage: testDir
+  })
+
+  var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
+  var a = flat.put(new Buffer('1'))
+    .then(function () {
+      fs.exists(path.join(testDir, key), t.ok)
+    })
+
+  var b = github.put(new Buffer('1'))
+    .then(function () {
+      debugger
+      fs.exists(path.join(testDir, key.slice(0, 2), key.slice(2)), t.ok)
+    })
+
+  Q.all([a, b])
+    .done(function () {
+      rimraf.sync(testDir)
+      t.end()
+    })
+})
 
 test('test invalid keys', function (t) {
   t.plan(1)
