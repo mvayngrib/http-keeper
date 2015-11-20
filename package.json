@@ -28,7 +28,7 @@
   "version": "1.3.4",
   "dependencies": {
     "bitkeeper-client-js": "tradle/bitkeeper-client-js",
-    "offline-keeper": "^1.5.0",
+    "offline-keeper": "^1.6.1",
     "q": "^1.4.1",
     "typeforce": "^1.3.6"
   }
