@@ -7,15 +7,14 @@ var test = require('tape')
 var Q = require('q')
 var rimraf = require('rimraf')
 var Keeper = require('../')
-var Offline = require('offline-keeper')
-var Server = require('bitkeeper-server-js')
+var Offline = require('@tradle/offline-keeper')
+var Server = require('@tradle/bitkeeper-server')
 var testDir = path.resolve('./tmp')
 var basePort = 53352
 
 rimraf.sync(testDir)
 
 test('flat vs github dir structure', function (t) {
-  debugger
   var flat = new Keeper({
     storage: testDir,
     flat: true
@@ -33,7 +32,6 @@ test('flat vs github dir structure', function (t) {
 
   var b = github.put(new Buffer('1'))
     .then(function () {
-      debugger
       fs.exists(path.join(testDir, key.slice(0, 2), key.slice(2)), t.ok)
     })
 

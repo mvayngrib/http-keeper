@@ -2,8 +2,8 @@
 var util = require('util')
 var Q = require('q')
 var typeforce = require('typeforce')
-var Offline = require('offline-keeper')
-var Client = require('bitkeeper-client-js')
+var Offline = require('@tradle/offline-keeper')
+var Client = require('@tradle/bitkeeper-client')
 
 util.inherits(Keeper, Offline)
 module.exports = Keeper
