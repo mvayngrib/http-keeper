@@ -5,48 +5,23 @@ var path = require('path')
 var parseUrl = require('url').parse
 var test = require('tape')
 var Q = require('q')
-var rimraf = require('rimraf')
 var Keeper = require('../')
 var Offline = require('@tradle/offline-keeper')
 var Server = require('@tradle/bitkeeper-server')
 var testDir = path.resolve('./tmp')
 var basePort = 53352
-
-rimraf.sync(testDir)
-
-test('flat vs github dir structure', function (t) {
-  var flat = new Keeper({
-    storage: testDir,
-    flat: true
-  })
-
-  var github = new Keeper({
-    storage: testDir
-  })
-
-  var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
-  var a = flat.put(new Buffer('1'))
-    .then(function () {
-      fs.exists(path.join(testDir, key), t.ok)
-    })
-
-  var b = github.put(new Buffer('1'))
-    .then(function () {
-      fs.exists(path.join(testDir, key.slice(0, 2), key.slice(2)), t.ok)
-    })
-
-  Q.all([a, b])
-    .done(function () {
-      rimraf.sync(testDir)
-      t.end()
-    })
-})
+var memdown = require('memdown')
+var levelup = require('levelup')
+var counter = 0
+var newDB = function () {
+  return levelup('tmp' + (counter++), { db: memdown })
+}
 
 test('test invalid keys', function (t) {
   t.plan(1)
 
   var keeper = new Keeper({
-    storage: testDir
+    db: newDB()
   })
 
   keeper.put('a', new Buffer('b'))
@@ -59,11 +34,25 @@ test('test invalid keys', function (t) {
     .done()
 })
 
-test('put, get', function (t) {
-  t.plan(2)
+test('put same data twice', function (t) {
+  t.plan(1)
 
   var keeper = new Keeper({
-    storage: testDir
+    db: newDB()
+  })
+
+  put()
+    .then(put)
+    .done(t.pass)
+
+  function put () {
+    return keeper.put('64fe16cc8a0c61c06bc403e02f515ce5614a35f1', new Buffer('1'))
+  }
+})
+
+test('put, get', function (t) {
+  var keeper = new Keeper({
+    db: newDB()
   })
 
   var k = [
@@ -90,9 +79,29 @@ test('put, get', function (t) {
     })
     .then(function (vals) {
       t.deepEqual(vals, v)
-      rimraf.sync(testDir)
     })
-    .done()
+    .then(function () {
+      return keeper.getAllKeys()
+    })
+    .then(function (keys) {
+      t.deepEqual(keys.sort(), k.slice().sort())
+      return keeper.getAllValues()
+    })
+    .then(function (vals) {
+      t.deepEqual(vals.sort(), v.slice().sort())
+      return keeper.getAll()
+    })
+    .then(function (map) {
+      t.deepEqual(Object.keys(map).sort(), k.slice().sort())
+      var vals = Object.keys(map).map(function (key) {
+        return map[key]
+      })
+
+      t.deepEqual(vals.sort(), v.slice().sort())
+    })
+    .done(function () {
+      t.end()
+    })
 })
 
 // test('timeout', function (t) {
@@ -143,7 +152,7 @@ test('put, get, fallback', function (t) {
   var mkServers = keys.map(function (key, i) {
     togo++
     var serverKeeper = new Offline({
-      storage: testDir + '/offline/' + i
+      db: newDB()
     })
 
     serverKeepers.push(serverKeeper)
@@ -166,7 +175,7 @@ test('put, get, fallback', function (t) {
       servers = _servers
       clientKeeper = new Keeper({
         storeOnFetch: true,
-        storage: testDir,
+        db: newDB(),
         fallbacks: servers.map(function (s, i) {
           return '127.0.0.1:' + (basePort + i)
         })
@@ -187,17 +196,17 @@ test('put, get, fallback', function (t) {
     })
     .then(function (v) {
       t.deepEqual(v, vals)
+      debugger
       return clientKeeper.close()
     })
     .done(function () {
-      rimraf.sync(testDir)
       t.end()
     })
 })
 
 test('put upload', function (t) {
   var serverKeeper = new Offline({
-    storage: testDir + '/server'
+    db: newDB()
   })
 
   var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
@@ -211,7 +220,7 @@ test('put upload', function (t) {
     .then(function (_server) {
       server = _server
       clientKeeper = new Keeper({
-        storage: testDir,
+        db: newDB(),
         fallbacks: [
           '127.0.0.1:' + basePort
         ]
@@ -232,7 +241,5 @@ test('put upload', function (t) {
       server.close()
       return clientKeeper.close()
     })
-    .done(function () {
-      rimraf.sync(testDir)
-    })
+    .done()
 })
