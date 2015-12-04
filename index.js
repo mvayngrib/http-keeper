@@ -84,7 +84,6 @@ Keeper.prototype._fetch = function (key) {
   function putAndReturn (val) {
     if (!self._storeOnFetch) return val
 
-      debugger
     return self.putOne(key, val)
       .then(function () {
         return val
