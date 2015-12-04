@@ -1,7 +1,7 @@
 
 var util = require('util')
-var Q = require('q')
 var typeforce = require('typeforce')
+var debug = require('debug')
 var Offline = require('@tradle/offline-keeper')
 var Client = require('@tradle/bitkeeper-client')
 
@@ -54,39 +54,37 @@ function Keeper (options) {
 //     })
 // }
 
-Keeper.prototype.push = function (options) {
+Keeper.prototype.push = async function (options) {
   var self = this
-  return this._normalizeOptions(options)
-    .then(function (options) {
-      return Q.allSettled(self._fallbacks.map(function (c) {
-        return c.put(options.key, options.value)
-      }))
-    })
+  options = await this._normalizeOptions(options)
+  this._fallbacks.forEach(async (c) => {
+    try {
+      await c.put(options.key, options.value)
+    } catch (err) {
+      debug('push failed', c.baseUrl(), err)
+    }
+  })
 }
 
-Keeper.prototype._fetch = function (key) {
+Keeper.prototype._fetch = async function (key) {
   var self = this
-  var i = 0
-
-  return tryNext()
-
-  function tryNext () {
-    if (i === self._fallbacks.length) {
-      return Q.reject(new Error('not found'))
+  var val
+  debugger
+  for (var i = 0; i < this._fallbacks.length; i++) {
+    var client = this._fallbacks[i]
+    try {
+      val = await client.getOne(key)
+    } catch (err) {
+      debug(`fetch ${key} from ${client.baseUrl()} failed`)
+      continue
     }
 
-    return self._fallbacks[i++]
-      .getOne(key)
-      .then(putAndReturn)
-      .catch(tryNext)
+    if (this._storeOnFetch) {
+      await this.putOne(key, val)
+    }
+
+    return val
   }
 
-  function putAndReturn (val) {
-    if (!self._storeOnFetch) return val
-
-    return self.putOne(key, val)
-      .then(function () {
-        return val
-      })
-  }
+  throw new Error('not found')
 }

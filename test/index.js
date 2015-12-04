@@ -5,118 +5,111 @@ var path = require('path')
 var parseUrl = require('url').parse
 var test = require('tape')
 var Q = require('q')
-var rimraf = require('rimraf')
 var Keeper = require('../')
 var Offline = require('@tradle/offline-keeper')
 var Server = require('@tradle/bitkeeper-server')
-var testDir = path.resolve('./tmp')
+var memdown = require('memdown')
+var levelup = require('levelup')
 var basePort = 53352
+var counter = 0
+var newDB = function () {
+  return levelup('tmp' + (counter++), { db: memdown })
+}
 
-rimraf.sync(testDir)
+// test('test invalid keys', async function (t) {
+//   t.plan(1)
 
-test('flat vs github dir structure', function (t) {
-  var flat = new Keeper({
-    storage: testDir,
-    flat: true
-  })
-
-  var github = new Keeper({
-    storage: testDir
-  })
-
-  var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
-  var a = flat.put(new Buffer('1'))
-    .then(function () {
-      fs.exists(path.join(testDir, key), t.ok)
-    })
-
-  var b = github.put(new Buffer('1'))
-    .then(function () {
-      fs.exists(path.join(testDir, key.slice(0, 2), key.slice(2)), t.ok)
-    })
-
-  Q.all([a, b])
-    .done(function () {
-      rimraf.sync(testDir)
-      t.end()
-    })
-})
-
-test('test invalid keys', function (t) {
-  t.plan(1)
-
-  var keeper = new Keeper({
-    storage: testDir
-  })
-
-  keeper.put('a', new Buffer('b'))
-    .then(function () {
-      t.fail()
-    })
-    .catch(function (err) {
-      t.pass()
-    })
-    .done()
-})
-
-test('put, get', function (t) {
-  t.plan(2)
-
-  var keeper = new Keeper({
-    storage: testDir
-  })
-
-  var k = [
-    // infoHashes of values
-    '64fe16cc8a0c61c06bc403e02f515ce5614a35f1',
-    '0a745fb75a7818acf09f27de1db7a76081d22776',
-    'bd45a097c00e557ea871233ea21d27a47f8f21a9'
-  ]
-
-  var v = ['1', '2', '3'].map(Buffer)
-  keeper.putOne(k[0], v[0])
-    .then(function () {
-      return keeper.getOne(k[0])
-    })
-    .then(function (v0) {
-      t.deepEqual(v0, v[0])
-    })
-    .then(function () {
-      // keeper should derive key
-      return keeper.putMany(v.slice(1))
-    })
-    .then(function () {
-      return keeper.getMany(k)
-    })
-    .then(function (vals) {
-      t.deepEqual(vals, v)
-      rimraf.sync(testDir)
-    })
-    .done()
-})
-
-// test('timeout', function (t) {
-//   var clientKeeper = new Keeper({
-//     storage: testDir,
-//     fallbacks: ['127.0.0.1:' + basePort]
+//   var keeper = new Keeper({
+//     db: newDB()
 //   })
 
-//   var server = http.createServer(function (c) {
-//     // hang
-//   })
+//   try {
+//     await keeper.put('a', new Buffer('b'))
+//     t.fail('invalid put succeeded')
+//   } catch (err) {
+//     t.pass()
+//   }
 
-//   server.listen(basePort, function () {
-//     clientKeeper.getOne('blah', 500)
-//       .catch(function (err) {
-//         t.ok(/time/.test(err.message))
-//         server.close()
-//         clientKeeper.close()
-//         rimraf.sync(testDir)
-//         t.end()
-//       })
-//       .done()
-//   })
+//   await keeper.close()
+//   t.end()
 // })
+
+// test('put same data twice', async function (t) {
+//   var keeper = new Keeper({
+//     db: newDB()
+//   })
+
+//   try {
+//     await put()
+//     await put()
+//     await keeper.close()
+//   } catch (err) {
+//     t.fail(err)
+//   }
+
+//   t.end()
+
+//   function put () {
+//     return keeper.put('64fe16cc8a0c61c06bc403e02f515ce5614a35f1', new Buffer('1'))
+//   }
+// })
+
+// test('put, get', async function (t) {
+//   var keeper = new Keeper({
+//     db: newDB()
+//   })
+
+//   var k = [
+//     // infoHashes of values
+//     '64fe16cc8a0c61c06bc403e02f515ce5614a35f1',
+//     '0a745fb75a7818acf09f27de1db7a76081d22776',
+//     'bd45a097c00e557ea871233ea21d27a47f8f21a9'
+//   ]
+
+//   var v = ['1', '2', '3'].map(Buffer)
+//   await keeper.putOne(k[0], v[0])
+//   var v0 = await keeper.getOne(k[0])
+//   t.deepEqual(v0, v[0])
+//   // keeper should derive key
+//   await keeper.putMany(v.slice(1))
+//   var vals = await keeper.getMany(k)
+//   t.deepEqual(vals, v)
+//   var keys = await keeper.getAllKeys()
+//   t.deepEqual(keys.sort(), k.slice().sort())
+//   vals = await keeper.getAllValues()
+//   t.deepEqual(vals.sort(), v.slice().sort())
+//   var map = await keeper.getAll()
+//   t.deepEqual(Object.keys(map).sort(), k.slice().sort())
+//   vals = Object.keys(map).map(function (key) {
+//     return map[key]
+//   })
+
+//   t.deepEqual(vals.sort(), v.slice().sort())
+//   await keeper.close()
+//   t.end()
+// })
+
+// // test('timeout', function (t) {
+// //   var clientKeeper = new Keeper({
+// //     db: newDB(),
+// //     fallbacks: ['127.0.0.1:' + basePort]
+// //   })
+
+// //   var server = http.createServer(function (c) {
+// //     // hang
+// //   })
+
+// //   server.listen(basePort, function () {
+// //     clientKeeper.getOne('blah', 500)
+// //       .catch(function (err) {
+// //         t.ok(/time/.test(err.message))
+// //         server.close()
+// //         clientKeeper.close()
+// //         t.end()
+// //       })
+// //       .done()
+// //   })
+// // })
 
 test('put, get, fallback', function (t) {
   // each server only has one value
@@ -143,7 +136,7 @@ test('put, get, fallback', function (t) {
   var mkServers = keys.map(function (key, i) {
     togo++
     var serverKeeper = new Offline({
-      storage: testDir + '/offline/' + i
+      db: newDB()
     })
 
     serverKeepers.push(serverKeeper)
@@ -166,7 +159,7 @@ test('put, get, fallback', function (t) {
       servers = _servers
       clientKeeper = new Keeper({
         storeOnFetch: true,
-        storage: testDir,
+        db: newDB(),
         fallbacks: servers.map(function (s, i) {
           return '127.0.0.1:' + (basePort + i)
         })
@@ -190,14 +183,13 @@ test('put, get, fallback', function (t) {
       return clientKeeper.close()
     })
     .done(function () {
-      rimraf.sync(testDir)
       t.end()
     })
 })
 
 test('put upload', function (t) {
   var serverKeeper = new Offline({
-    storage: testDir + '/server'
+    db: newDB()
   })
 
   var key = '64fe16cc8a0c61c06bc403e02f515ce5614a35f1'
@@ -211,7 +203,7 @@ test('put upload', function (t) {
     .then(function (_server) {
       server = _server
       clientKeeper = new Keeper({
-        storage: testDir,
+        db: newDB(),
         fallbacks: [
           '127.0.0.1:' + basePort
         ]
@@ -232,7 +224,5 @@ test('put upload', function (t) {
       server.close()
       return clientKeeper.close()
     })
-    .done(function () {
-      rimraf.sync(testDir)
-    })
+    .done()
 })

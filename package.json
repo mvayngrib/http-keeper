@@ -5,10 +5,12 @@
   },
   "description": "Basic offline keeper with fallback to fetching files via http",
   "devDependencies": {
-    "@tradle/bitkeeper-server": "0.0.1",
-    "bitkeeper-server-js": "tradle/bitkeeper-server-js",
-    "rimraf": "^2.4.3",
-    "tape": "^4.2.0"
+    "babel-plugin-transform-async-functions": "^6.1.18",
+    "babel-plugin-transform-object-rest-spread": "^6.1.18",
+    "babel-plugin-transform-regenerator": "^6.2.0",
+    "babel-preset-es2015": "^6.1.18",
+    "levelup": "^1.3.1",
+    "memdown": "^1.1.0"
   },
   "homepage": "https://github.com/tradle/http-keeper",
   "keywords": [
@@ -24,12 +26,13 @@
     "url": "https://github.com/tradle/http-keeper"
   },
   "scripts": {
-    "test": "node test"
+    "test": "babel-node test"
   },
   "version": "2.0.0",
   "dependencies": {
     "@tradle/bitkeeper-client": "0.0.1",
-    "@tradle/offline-keeper": "^2.0.0",
+    "@tradle/offline-keeper": "^2.1.1",
+    "debug": "^2.2.0",
     "q": "^1.4.1",
     "typeforce": "^1.3.6"
   }
