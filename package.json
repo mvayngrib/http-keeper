@@ -37,7 +37,7 @@
     "postbuild": "npm run test -s",
     "prepublish": "npm run build -s"
   },
-  "version": "2.0.0",
+  "version": "2.1.0",
   "dependencies": {
     "@tradle/bitkeeper-client": "0.0.1",
     "@tradle/offline-keeper": "^2.1.5",
