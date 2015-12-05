@@ -1,7 +1,7 @@
 
 var util = require('util')
 var typeforce = require('typeforce')
-var debug = require('debug')
+var debug = require('debug')('http-keeper')
 var Offline = require('@tradle/offline-keeper')
 var Client = require('@tradle/bitkeeper-client')
 
@@ -57,19 +57,19 @@ function Keeper (options) {
 Keeper.prototype.push = async function (options) {
   var self = this
   options = await this._normalizeOptions(options)
-  this._fallbacks.forEach(async (c) => {
+  for (var i = 0; i < this._fallbacks.length; i++) {
+    var c = this._fallbacks[i]
     try {
       await c.put(options.key, options.value)
     } catch (err) {
       debug('push failed', c.baseUrl(), err)
     }
-  })
+  }
 }
 
 Keeper.prototype._fetch = async function (key) {
   var self = this
   var val
-  debugger
   for (var i = 0; i < this._fallbacks.length; i++) {
     var client = this._fallbacks[i]
     try {
