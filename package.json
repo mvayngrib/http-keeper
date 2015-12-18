@@ -28,7 +28,7 @@
   "scripts": {
     "test": "node test"
   },
-  "version": "3.0.1",
+  "version": "3.0.2",
   "dependencies": {
     "@tradle/bitkeeper-client": "^1.0.0",
     "@tradle/offline-keeper": "^3.0.2",
