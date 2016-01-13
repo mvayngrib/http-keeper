@@ -31,7 +31,7 @@
   "version": "3.0.4",
   "dependencies": {
     "@tradle/bitkeeper-client": "^2.0.1",
-    "@tradle/offline-keeper": "^3.0.2",
+    "@tradle/offline-keeper": "^3.0.4",
     "q": "^1.4.1",
     "typeforce": "^1.3.6"
   }
